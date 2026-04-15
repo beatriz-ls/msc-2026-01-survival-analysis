@@ -1,5 +1,8 @@
 library(survival)
 library(tidyverse)
+#devtools::install_github("fndemarqui/survstan")
+library(survstan)
+library(GGally)
 
 # Script X: Modelos de tempo acelerados
 # - Seguindo o cap 5.1. do livro do professor
@@ -14,7 +17,25 @@ leucemia <- data.frame(
   lwbc = c(3.36,2.88,3.63,3.41,3.78,4.02,4.00,4.23,3.73,3.85,3.97,4.51,4.54,5.00,5.00,4.72,5.00)  
 )
 
-exponencial1 <- survreg(Surv(tempo, evento)~lwbc, data = leucemia, dist = "exponential")
-weibull1 <- survreg(Surv(tempo, evento)~lwbc, data = leucemia, dist = "weibull")
+# Ajustando modelo -------------------------------------------------------------
+
+## c/ pacote survival
+exponencial1 <- survreg(Surv(tempo, evento)~lwbc,
+                        data = leucemia, dist = "exponential")
+weibull1 <- survreg(Surv(tempo, evento)~lwbc,
+                    data = leucemia, dist = "weibull")
 
 anova(exponencial1, weibull1)
+
+## c/ pacote survstan
+
+exponencial2 <- aftreg(Surv(tempo, evento)~lwbc, data = leucemia, dist = "exponential")
+weibull2 <- aftreg(Surv(tempo, evento)~lwbc, data = leucemia, dist = "weibull")
+
+anova(exponencial2, weibull2)
+
+# Comparando modelos 
+
+models <- list(survreg = exponencial1, aftreg = exponencial2)
+ggcoef_compare(models, include = c("lwbc"))
+
