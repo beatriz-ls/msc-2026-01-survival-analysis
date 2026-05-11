@@ -1,0 +1,100 @@
+---
+title: "Lista de atividades de Análise de Sobrevivência"
+author: "Beatriz Lima Silveira"
+format: 
+  pdf:
+      number-sections: false
+---
+
+# Questão 1
+
+::: {.callout-note}
+## Enunciado
+
+Seja $T \sim \text{Exp}(\lambda)$.
+
+Considerando uma amostra aleatória de tamanho $n$ de $T$, pede-se:
+
+a) Obtenha a expressão para a função de verossimilhança na presença de dados com censura à direita. Suponha que o mecanismo gerador da censura é não informativo.
+:::
+
+Para a distribuição exponencial:
+
+$$
+f(t \mid \lambda) = \lambda e^{-\lambda t}, \quad t > 0
+$$
+
+e a função de sobrevivência é:
+
+$$
+S(t \mid \lambda) = P(T > t) = e^{-\lambda t}
+$$
+
+Considere:
+
+- $t_i$: tempo observado para o indivíduo $i$;
+- $\delta_i$:
+  
+$$
+\delta_i =
+\begin{cases}
+1, & \text{se houve falha} \\
+0, & \text{se houve censura à direita}
+\end{cases}
+$$
+
+Na presença de censura à direita não informativa:
+
+- observações completas contribuem com a densidade $f(t_i)$;
+- observações censuradas contribuem com a sobrevivência $S(t_i)$.
+
+Assim, a função de verossimilhança é:
+
+$$
+L(\lambda)
+=
+\prod_{i=1}^{n}
+[f(t_i \mid \lambda)]^{\delta_i}
+[S(t_i \mid \lambda)]^{1-\delta_i}
+$$
+
+Substituindo as expressões da distribuição exponencial:
+
+$$
+L(\lambda)
+=
+\prod_{i=1}^{n}
+(\lambda e^{-\lambda t_i})^{\delta_i}
+(e^{-\lambda t_i})^{1-\delta_i}
+$$
+
+Simplificando:
+
+$$
+L(\lambda)
+=
+\lambda^{\sum_{i=1}^{n}\delta_i}
+\exp\left(
+-\lambda \sum_{i=1}^{n} t_i
+\right)
+$$
+
+Portanto, a função de verossimilhança para a amostra com censura à direita é:
+
+$$
+\boxed{
+L(\lambda)
+=
+\lambda^{d}
+e^{-\lambda \sum_{i=1}^{n} t_i}
+}
+$$
+
+onde
+
+$$
+d = \sum_{i=1}^{n}\delta_i
+$$
+
+representa o número de falhas observadas.
+
