@@ -1,0 +1,1093 @@
+---
+title: "Lista de atividades de Análise de Sobrevivência"
+author: "Beatriz Lima Silveira"
+
+format:
+  pdf:
+    number-sections: false
+    documentclass: article
+---
+
+# Questão 1
+
+::: {.callout-note}
+## Enunciado
+
+Seja $T \sim \text{Exp}(\lambda)$.
+
+Considerando uma amostra aleatória de tamanho $n$ de $T$, pede-se:
+
+a) Obtenha a expressão para a função de verossimilhança na presença de dados com censura à direita. Suponha que o mecanismo gerador da censura é não informativo.
+:::
+
+Para a distribuição exponencial:
+
+$$
+f(t \mid \lambda) = \lambda e^{-\lambda t}, \quad t > 0
+$$
+
+e a função de sobrevivência é:
+
+$$
+S(t \mid \lambda) = P(T > t) = e^{-\lambda t}
+$$
+
+Considere:
+
+- $t_i$: tempo observado para o indivíduo $i$;
+- $\delta_i$:
+  
+$$
+\delta_i =
+\begin{cases}
+1, & \text{se houve falha} \\
+0, & \text{se houve censura à direita}
+\end{cases}
+$$
+
+Na presença de censura à direita não informativa:
+
+- observações completas contribuem com a densidade $f(t_i)$;
+- observações censuradas contribuem com a sobrevivência $S(t_i)$.
+
+Assim, a função de verossimilhança é:
+
+$$
+L(\lambda)
+=
+\prod_{i=1}^{n}
+[f(t_i \mid \lambda)]^{\delta_i}
+[S(t_i \mid \lambda)]^{1-\delta_i}
+$$
+
+Substituindo as expressões da distribuição exponencial:
+
+$$
+L(\lambda)
+=
+\prod_{i=1}^{n}
+(\lambda e^{-\lambda t_i})^{\delta_i}
+(e^{-\lambda t_i})^{1-\delta_i}
+$$
+
+Simplificando:
+
+$$
+L(\lambda)
+=
+\lambda^{\sum_{i=1}^{n}\delta_i}
+\exp\left(
+-\lambda \sum_{i=1}^{n} t_i
+\right)
+$$
+
+Portanto, a função de verossimilhança para a amostra com censura à direita é:
+
+$$
+\boxed{
+L(\lambda)
+=
+\lambda^{d}
+e^{-\lambda \sum_{i=1}^{n} t_i}
+}
+$$
+
+onde
+
+$$
+d = \sum_{i=1}^{n}\delta_i
+$$
+
+representa o número de falhas observadas.
+
+::: {.callout-note}
+## Enunciado
+b) Encontre o estimador de máxima verossimilhança de $\lambda$
+:::
+
+Para encontrar o estimador de máxima verossimilhança, partimos da função de verossimilhança:
+
+$$
+L(\lambda)
+=
+\lambda^{d}
+\exp\left(
+-\lambda \sum_{i=1}^{n} t_i
+\right),
+\quad \text{onde } d = \sum_{i=1}^{n}\delta_i.
+$$
+
+A função log-verossimilhança é dada por:
+
+$$
+\ell(\lambda)
+=
+\log L(\lambda)
+=
+d \log \lambda
+-
+\lambda \sum_{i=1}^{n} t_i.
+$$
+
+Derivando em relação a $\lambda$:
+
+$$
+\frac{d\ell(\lambda)}{d\lambda}
+=
+\frac{d}{\lambda}
+-
+\sum_{i=1}^{n} t_i.
+$$
+
+Igualando a zero para obter o ponto crítico:
+
+$$
+\frac{d}{\lambda}
+-
+\sum_{i=1}^{n} t_i
+= 0
+$$
+
+$$
+\frac{d}{\lambda}
+=
+\sum_{i=1}^{n} t_i
+$$
+
+Isolando $\lambda$:
+
+$$
+\hat{\lambda}
+=
+\frac{d}{\sum_{i=1}^{n} t_i}.
+$$
+
+Portanto, o estimador de máxima verossimilhança de $\lambda$ é:
+
+$$
+\boxed{
+\hat{\lambda}_{MV}
+=
+\frac{\sum_{i=1}^{n} \delta_i}{\sum_{i=1}^{n} t_i}
+}
+$$
+
+# Questão 4
+
+::: {.callout-note}
+## Enunciado
+
+Considere o modelo PO definido por:
+
+$$
+R(t|\theta,\mathbf{x})
+=
+R_0(t|\theta)e^{\mathbf{x}'\beta},
+$$
+
+em que
+
+$$
+R_0(t|\theta)
+=
+\frac{1-S_0(t|\theta)}{S_0(t|\theta)}
+$$
+
+é a função chance de linha de base com vetor $q \times 1$ de parâmetros $\theta$, $\mathbf{x}$ é um vetor $1 \times p$ de covariáveis e $\beta$ é um vetor $p \times 1$ de coeficientes da regressão.
+
+Mostre que:
+
+a) A função de sobrevivência do modelo PO é dada por
+
+$$
+S(t|\theta,\mathbf{x})
+=
+\frac{1}{1+R_0(t|\theta)e^{\mathbf{x}'\beta}}
+$$
+:::
+
+Pela definição da função chance:
+
+$$
+R(t|\theta,\mathbf{x})
+=
+\frac{1-S(t|\theta,\mathbf{x})}{S(t|\theta,\mathbf{x})}.
+$$
+
+Como o modelo PO assume que:
+
+$$
+R(t|\theta,\mathbf{x})
+=
+R_0(t|\theta)e^{\mathbf{x}'\beta},
+$$
+
+temos:
+
+$$
+\frac{1-S(t|\theta,\mathbf{x})}{S(t|\theta,\mathbf{x})}
+=
+R_0(t|\theta)e^{\mathbf{x}'\beta}.
+$$
+
+Multiplicando ambos os lados por $S(t|\theta,\mathbf{x})$:
+
+$$
+1-S(t|\theta,\mathbf{x})
+=
+S(t|\theta,\mathbf{x})
+R_0(t|\theta)e^{\mathbf{x}'\beta}.
+$$
+
+Reorganizando os termos:
+
+$$
+1
+=
+S(t|\theta,\mathbf{x})
+\left[
+1 + R_0(t|\theta)e^{\mathbf{x}'\beta}
+\right].
+$$
+
+Logo,
+
+$$
+S(t|\theta,\mathbf{x})
+=
+\frac{1}{
+1 + R_0(t|\theta)e^{\mathbf{x}'\beta}
+}.
+$$
+
+Portanto,
+
+$$
+\boxed{
+S(t|\theta,\mathbf{x})
+=
+\frac{1}{
+1 + R_0(t|\theta)e^{\mathbf{x}'\beta}
+}
+}
+$$
+
+::: {.callout-note}
+## Enunciado
+
+b) Mostre que a função taxa de falha do modelo PO pode ser expressa como:
+
+$$
+h(t|\theta,\mathbf{x})
+=
+\frac{
+e^{\mathbf{x}'\beta}
+}{
+e^{\mathbf{x}'\beta}\overline{F}_0(t|\theta)
++
+S_0(t|\theta)
+}
+h_0(t|\theta).
+$$
+:::
+
+Sabemos que a função taxa de falha é dada por:
+
+$$
+h(t)
+=
+\frac{f(t)}{S(t)}
+=
+-\frac{d}{dt}\log S(t).
+$$
+
+Da questão anterior:
+
+$$
+S(t|\theta,\mathbf{x})
+=
+\frac{1}{
+1 + R_0(t|\theta)e^{\mathbf{x}'\beta}
+}.
+$$
+
+Tomando logaritmo:
+
+$$
+\log S(t|\theta,\mathbf{x})
+=
+-\log\left[
+1+R_0(t|\theta)e^{\mathbf{x}'\beta}
+\right].
+$$
+
+Derivando em relação a $t$:
+
+$$
+h(t|\theta,\mathbf{x})
+=
+\frac{
+e^{\mathbf{x}'\beta}R_0'(t|\theta)
+}{
+1+R_0(t|\theta)e^{\mathbf{x}'\beta}
+}.
+$$
+
+Agora, usando:
+
+$$
+R_0(t|\theta)
+=
+\frac{1-S_0(t|\theta)}{S_0(t|\theta)}
+=
+\frac{\overline{F}_0(t|\theta)}{S_0(t|\theta)},
+$$
+
+temos:
+
+$$
+R_0'(t|\theta)
+=
+\frac{f_0(t|\theta)}{S_0^2(t|\theta)}.
+$$
+
+Como
+
+$$
+h_0(t|\theta)
+=
+\frac{f_0(t|\theta)}{S_0(t|\theta)},
+$$
+
+segue que
+
+$$
+R_0'(t|\theta)
+=
+\frac{h_0(t|\theta)}{S_0(t|\theta)}.
+$$
+
+Substituindo:
+
+$$
+h(t|\theta,\mathbf{x})
+=
+\frac{
+e^{\mathbf{x}'\beta}
+}{
+S_0(t|\theta)
+\left[
+1+R_0(t|\theta)e^{\mathbf{x}'\beta}
+\right]
+}
+h_0(t|\theta).
+$$
+
+Como
+
+$$
+R_0(t|\theta)
+=
+\frac{\overline{F}_0(t|\theta)}{S_0(t|\theta)},
+$$
+
+obtemos:
+
+$$
+1+R_0(t|\theta)e^{\mathbf{x}'\beta}
+=
+\frac{
+S_0(t|\theta)
++
+e^{\mathbf{x}'\beta}\overline{F}_0(t|\theta)
+}{
+S_0(t|\theta)
+}.
+$$
+
+Substituindo:
+
+$$
+h(t|\theta,\mathbf{x})
+=
+\frac{
+e^{\mathbf{x}'\beta}
+}{
+e^{\mathbf{x}'\beta}\overline{F}_0(t|\theta)
++
+S_0(t|\theta)
+}
+h_0(t|\theta).
+$$
+
+Portanto,
+
+$$
+\boxed{
+h(t|\theta,\mathbf{x})
+=
+\frac{
+e^{\mathbf{x}'\beta}
+}{
+e^{\mathbf{x}'\beta}\overline{F}_0(t|\theta)
++
+S_0(t|\theta)
+}
+h_0(t|\theta)
+}
+$$
+
+::: {.callout-note}
+## Enunciado
+
+c) Mostre que a razão entre as funções de taxa de falha para dois vetores de covariáveis $\mathbf{x}_1$ e $\mathbf{x}_2$ é dependente do tempo.
+:::
+
+Considere:
+
+$$
+h(t|\theta,\mathbf{x})
+=
+\frac{
+e^{\mathbf{x}'\beta}
+}{
+e^{\mathbf{x}'\beta}\overline{F}_0(t|\theta)
++
+S_0(t|\theta)
+}
+h_0(t|\theta).
+$$
+
+Para dois vetores de covariáveis $\mathbf{x}_1$ e $\mathbf{x}_2$, temos:
+
+$$
+\frac{
+h(t|\theta,\mathbf{x}_2)
+}{
+h(t|\theta,\mathbf{x}_1)
+}
+=
+\frac{
+\displaystyle
+\frac{
+e^{\mathbf{x}_2'\beta}
+}{
+e^{\mathbf{x}_2'\beta}\overline{F}_0(t|\theta)
++
+S_0(t|\theta)
+}
+h_0(t|\theta)
+}{
+\displaystyle
+\frac{
+e^{\mathbf{x}_1'\beta}
+}{
+e^{\mathbf{x}_1'\beta}\overline{F}_0(t|\theta)
++
+S_0(t|\theta)
+}
+h_0(t|\theta)
+}.
+$$
+
+Cancelando $h_0(t|\theta)$:
+
+$$
+\frac{
+h(t|\theta,\mathbf{x}_2)
+}{
+h(t|\theta,\mathbf{x}_1)
+}
+=
+e^{(\mathbf{x}_2-\mathbf{x}_1)'\beta}
+\frac{
+e^{\mathbf{x}_1'\beta}\overline{F}_0(t|\theta)
++
+S_0(t|\theta)
+}{
+e^{\mathbf{x}_2'\beta}\overline{F}_0(t|\theta)
++
+S_0(t|\theta)
+}.
+$$
+
+Observe que a expressão depende de:
+
+$$
+S_0(t|\theta)
+\quad \text{e} \quad
+\overline{F}_0(t|\theta),
+$$
+
+que são funções do tempo.
+
+Logo, a razão de taxas não é constante ao longo do tempo.
+
+Portanto, a razão entre as funções de taxa de falha depende do tempo.
+
+::: {.callout-note}
+## Enunciado
+
+d) Mostre que
+
+$$
+\lim_{t\to\infty}
+\frac{
+h(t|\theta,\mathbf{x}_2)
+}{
+h(t|\theta,\mathbf{x}_1)
+}
+=
+1.
+$$
+:::
+
+Da questão anterior:
+
+$$
+\frac{
+h(t|\theta,\mathbf{x}_2)
+}{
+h(t|\theta,\mathbf{x}_1)
+}
+=
+e^{(\mathbf{x}_2-\mathbf{x}_1)'\beta}
+\frac{
+e^{\mathbf{x}_1'\beta}\overline{F}_0(t|\theta)
++
+S_0(t|\theta)
+}{
+e^{\mathbf{x}_2'\beta}\overline{F}_0(t|\theta)
++
+S_0(t|\theta)
+}.
+$$
+
+Como:
+
+$$
+\overline{F}_0(t|\theta)
+=
+1-S_0(t|\theta),
+$$
+
+e para distribuições próprias de sobrevivência:
+
+$$
+S_0(t|\theta)\to 0
+\quad \text{quando } t\to\infty,
+$$
+
+temos:
+
+$$
+\overline{F}_0(t|\theta)\to 1.
+$$
+
+Assim,
+
+$$
+\lim_{t\to\infty}
+\frac{
+h(t|\theta,\mathbf{x}_2)
+}{
+h(t|\theta,\mathbf{x}_1)
+}
+=
+e^{(\mathbf{x}_2-\mathbf{x}_1)'\beta}
+\frac{
+e^{\mathbf{x}_1'\beta}
+}{
+e^{\mathbf{x}_2'\beta}
+}.
+$$
+
+Simplificando:
+
+$$
+=
+e^{(\mathbf{x}_2-\mathbf{x}_1)'\beta}
+e^{(\mathbf{x}_1-\mathbf{x}_2)'\beta}
+=
+e^0
+=
+1.
+$$
+
+Portanto,
+
+$$
+\boxed{
+\lim_{t\to\infty}
+\frac{
+h(t|\theta,\mathbf{x}_2)
+}{
+h(t|\theta,\mathbf{x}_1)
+}
+=
+1
+}
+$$
+
+# Questão 5
+
+::: {.callout-note}
+## Enunciado
+
+Considere o modelo YP, cuja função de sobrevivência é dada por:
+
+$$
+S(t|\theta,\mathbf{x})
+=
+\left[
+1 + R_0(t|\theta)e^{\mathbf{x}'(\beta-\phi)}
+\right]^{-e^{\mathbf{x}'\phi}},
+$$
+
+em que
+
+$$
+R_0(t|\theta)
+=
+\frac{1-S_0(t|\theta)}{S_0(t|\theta)}
+$$
+
+é a função chance de linha de base com vetor $q \times 1$ de parâmetros $\theta$, $\mathbf{x}$ é um vetor $1 \times p$ de covariáveis, e $\beta$ e $\phi$ são vetores $p \times 1$ de coeficientes da regressão.
+
+Mostre que:
+
+a) A função taxa de falha é dada por:
+
+$$
+h(t|\theta,\mathbf{x})
+=
+\frac{
+e^{\mathbf{x}'(\beta+\phi)}
+}{
+e^{\mathbf{x}'\beta}\overline{F}_0(t|\theta)
++
+e^{\mathbf{x}'\phi}S_0(t|\theta)
+}
+h_0(t|\theta).
+$$
+:::
+
+A função taxa de falha é definida por:
+
+$$
+h(t)
+=
+-\frac{d}{dt}\log S(t).
+$$
+
+Tomando logaritmo da função de sobrevivência:
+
+$$
+\log S(t|\theta,\mathbf{x})
+=
+-
+e^{\mathbf{x}'\phi}
+\log
+\left[
+1 + R_0(t|\theta)e^{\mathbf{x}'(\beta-\phi)}
+\right].
+$$
+
+Derivando em relação a $t$:
+
+$$
+h(t|\theta,\mathbf{x})
+=
+e^{\mathbf{x}'\phi}
+\frac{
+e^{\mathbf{x}'(\beta-\phi)}R_0'(t|\theta)
+}{
+1 + R_0(t|\theta)e^{\mathbf{x}'(\beta-\phi)}
+}.
+$$
+
+Simplificando os expoentes:
+
+$$
+h(t|\theta,\mathbf{x})
+=
+\frac{
+e^{\mathbf{x}'\beta}R_0'(t|\theta)
+}{
+1 + R_0(t|\theta)e^{\mathbf{x}'(\beta-\phi)}
+}.
+$$
+
+Agora, usando:
+
+$$
+R_0(t|\theta)
+=
+\frac{\overline{F}_0(t|\theta)}{S_0(t|\theta)},
+$$
+
+e
+
+$$
+R_0'(t|\theta)
+=
+\frac{h_0(t|\theta)}{S_0(t|\theta)},
+$$
+
+temos:
+
+$$
+h(t|\theta,\mathbf{x})
+=
+\frac{
+e^{\mathbf{x}'\beta}
+}{
+S_0(t|\theta)
+\left[
+1 + R_0(t|\theta)e^{\mathbf{x}'(\beta-\phi)}
+\right]
+}
+h_0(t|\theta).
+$$
+
+Substituindo a expressão de $R_0(t|\theta)$:
+
+$$
+1 + R_0(t|\theta)e^{\mathbf{x}'(\beta-\phi)}
+=
+1 +
+\frac{
+\overline{F}_0(t|\theta)
+}{
+S_0(t|\theta)
+}
+e^{\mathbf{x}'(\beta-\phi)}.
+$$
+
+Colocando no mesmo denominador:
+
+$$
+=
+\frac{
+S_0(t|\theta)
++
+e^{\mathbf{x}'(\beta-\phi)}
+\overline{F}_0(t|\theta)
+}{
+S_0(t|\theta)
+}.
+$$
+
+Logo,
+
+$$
+h(t|\theta,\mathbf{x})
+=
+\frac{
+e^{\mathbf{x}'\beta}
+}{
+e^{\mathbf{x}'(\beta-\phi)}
+\overline{F}_0(t|\theta)
++
+S_0(t|\theta)
+}
+h_0(t|\theta).
+$$
+
+Multiplicando numerador e denominador por $e^{\mathbf{x}'\phi}$:
+
+$$
+h(t|\theta,\mathbf{x})
+=
+\frac{
+e^{\mathbf{x}'(\beta+\phi)}
+}{
+e^{\mathbf{x}'\beta}
+\overline{F}_0(t|\theta)
++
+e^{\mathbf{x}'\phi}
+S_0(t|\theta)
+}
+h_0(t|\theta).
+$$
+
+Portanto,
+
+$$
+\boxed{
+h(t|\theta,\mathbf{x})
+=
+\frac{
+e^{\mathbf{x}'(\beta+\phi)}
+}{
+e^{\mathbf{x}'\beta}\overline{F}_0(t|\theta)
++
+e^{\mathbf{x}'\phi}S_0(t|\theta)
+}
+h_0(t|\theta)
+}
+$$
+
+::: {.callout-note}
+## Enunciado
+
+b) Mostre que os modelos PH e PO são casos particulares do modelo YP quando $\beta=\phi$ e $\phi=0$, respectivamente.
+:::
+
+A função de sobrevivência do modelo YP é:
+
+$$
+S(t|\theta,\mathbf{x})
+=
+\left[
+1 + R_0(t|\theta)e^{\mathbf{x}'(\beta-\phi)}
+\right]^{-e^{\mathbf{x}'\phi}}.
+$$
+
+### Caso 1: $\beta=\phi$
+
+Se $\beta=\phi$, então:
+
+$$
+\beta-\phi = 0.
+$$
+
+Logo,
+
+$$
+e^{\mathbf{x}'(\beta-\phi)} = 1.
+$$
+
+Assim,
+
+$$
+S(t|\theta,\mathbf{x})
+=
+\left[
+1 + R_0(t|\theta)
+\right]^{-e^{\mathbf{x}'\beta}}.
+$$
+
+Como
+
+$$
+1+R_0(t|\theta)
+=
+\frac{1}{S_0(t|\theta)},
+$$
+
+temos:
+
+$$
+S(t|\theta,\mathbf{x})
+=
+\left[
+\frac{1}{S_0(t|\theta)}
+\right]^{-e^{\mathbf{x}'\beta}}
+=
+S_0(t|\theta)^{e^{\mathbf{x}'\beta}}.
+$$
+
+Esta é exatamente a forma do modelo de riscos proporcionais (PH).
+
+---
+
+### Caso 2: $\phi=0$
+
+Se $\phi=0$, então:
+
+$$
+e^{\mathbf{x}'\phi}=1.
+$$
+
+Logo,
+
+$$
+S(t|\theta,\mathbf{x})
+=
+\left[
+1 + R_0(t|\theta)e^{\mathbf{x}'\beta}
+\right]^{-1}.
+$$
+
+Ou seja,
+
+$$
+S(t|\theta,\mathbf{x})
+=
+\frac{
+1
+}{
+1 + R_0(t|\theta)e^{\mathbf{x}'\beta}
+}.
+$$
+
+Esta é exatamente a função de sobrevivência do modelo PO.
+
+Portanto, os modelos PH e PO são casos particulares do modelo YP.
+
+::: {.callout-note}
+## Enunciado
+
+c) Mostre que a razão entre as funções de taxa de falha para dois vetores de covariáveis $\mathbf{x}_1$ e $\mathbf{x}_2$ no curto e longo prazo são dadas, respectivamente, por:
+
+$$
+\lim_{t\to0}
+\frac{
+h(t|\theta,\mathbf{x}_2)
+}{
+h(t|\theta,\mathbf{x}_1)
+}
+=
+\exp\{(\mathbf{x}_2-\mathbf{x}_1)\beta\}
+$$
+
+e
+
+$$
+\lim_{t\to\infty}
+\frac{
+h(t|\theta,\mathbf{x}_2)
+}{
+h(t|\theta,\mathbf{x}_1)
+}
+=
+\exp\{(\mathbf{x}_2-\mathbf{x}_1)\phi\}.
+$$
+:::
+
+Da questão anterior:
+
+$$
+h(t|\theta,\mathbf{x})
+=
+\frac{
+e^{\mathbf{x}'(\beta+\phi)}
+}{
+e^{\mathbf{x}'\beta}\overline{F}_0(t|\theta)
++
+e^{\mathbf{x}'\phi}S_0(t|\theta)
+}
+h_0(t|\theta).
+$$
+
+Para dois vetores de covariáveis $\mathbf{x}_1$ e $\mathbf{x}_2$:
+
+$$
+\frac{
+h(t|\theta,\mathbf{x}_2)
+}{
+h(t|\theta,\mathbf{x}_1)
+}
+=
+e^{(\mathbf{x}_2-\mathbf{x}_1)'(\beta+\phi)}
+\frac{
+e^{\mathbf{x}_1'\beta}\overline{F}_0(t|\theta)
++
+e^{\mathbf{x}_1'\phi}S_0(t|\theta)
+}{
+e^{\mathbf{x}_2'\beta}\overline{F}_0(t|\theta)
++
+e^{\mathbf{x}_2'\phi}S_0(t|\theta)
+}.
+$$
+
+## Curto prazo: $t\to0$
+
+Sabemos que:
+
+$$
+S_0(t|\theta)\to1
+\quad \text{e} \quad
+\overline{F}_0(t|\theta)\to0.
+$$
+
+Logo,
+
+$$
+\lim_{t\to0}
+\frac{
+h(t|\theta,\mathbf{x}_2)
+}{
+h(t|\theta,\mathbf{x}_1)
+}
+=
+e^{(\mathbf{x}_2-\mathbf{x}_1)'(\beta+\phi)}
+\frac{
+e^{\mathbf{x}_1'\phi}
+}{
+e^{\mathbf{x}_2'\phi}
+}.
+$$
+
+Simplificando:
+
+$$
+=
+e^{(\mathbf{x}_2-\mathbf{x}_1)'\beta}.
+$$
+
+Portanto,
+
+$$
+\boxed{
+\lim_{t\to0}
+\frac{
+h(t|\theta,\mathbf{x}_2)
+}{
+h(t|\theta,\mathbf{x}_1)
+}
+=
+\exp\{(\mathbf{x}_2-\mathbf{x}_1)'\beta\}
+}
+$$
+
+## Longo prazo: $t\to\infty$
+
+Agora, quando $t\to\infty$:
+
+$$
+S_0(t|\theta)\to0
+\quad \text{e} \quad
+\overline{F}_0(t|\theta)\to1.
+$$
+
+Assim,
+
+$$
+\lim_{t\to\infty}
+\frac{
+h(t|\theta,\mathbf{x}_2)
+}{
+h(t|\theta,\mathbf{x}_1)
+}
+=
+e^{(\mathbf{x}_2-\mathbf{x}_1)'(\beta+\phi)}
+\frac{
+e^{\mathbf{x}_1'\beta}
+}{
+e^{\mathbf{x}_2'\beta}
+}.
+$$
+
+Simplificando:
+
+$$
+=
+e^{(\mathbf{x}_2-\mathbf{x}_1)'\phi}.
+$$
+
+Portanto,
+
+$$
+\boxed{
+\lim_{t\to\infty}
+\frac{
+h(t|\theta,\mathbf{x}_2)
+}{
+h(t|\theta,\mathbf{x}_1)
+}
+=
+\exp\{(\mathbf{x}_2-\mathbf{x}_1)'\phi\}
+}
+$$

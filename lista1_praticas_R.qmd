@@ -1,0 +1,352 @@
+---
+title: "Lista de atividades de Análise de Sobrevivência"
+author: "Beatriz Lima Silveira"
+
+format:
+  pdf:
+    number-sections: false
+    documentclass: article
+---
+
+# Questão 2
+
+::: {.callout-note}
+## Enunciado
+Implemente os modelos exponencial, gamma, log-normal e log-logistico no stan e ajuste os modelos implementados ao banco de dados sobrevivencia::isoladores.
+:::
+
+## Carregando pacotes
+
+```{r}
+library(rstan)
+library(sobrevivencia)
+library(survival)
+
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+```
+
+## Banco de dados
+
+```{r}
+data(isoladores, package = "sobrevivencia")
+
+head(isoladores)
+```
+
+## Preparação dos dados
+
+```{r}
+N <- nrow(isoladores)
+
+stan_data <- list(
+  N = N,
+  t = isoladores$tempo,
+  d = isoladores$status
+)
+```
+
+# Modelo Exponencial
+
+Assumimos:
+
+$$
+T_i \sim \text{Exp}(\lambda)
+$$
+
+A função de sobrevivência é dada por:
+
+$$
+S(t) = e^{-\lambda t}
+$$
+
+## Código Stan
+
+```{r}
+exp_stan <- '
+data {
+  int<lower=1> N;
+  vector<lower=0>[N] t;
+  array[N] int<lower=0,upper=1> d;
+}
+
+parameters {
+  real<lower=0> lambda;
+}
+
+model {
+
+  lambda ~ gamma(0.01, 0.01);
+
+  for (i in 1:N) {
+
+    if (d[i] == 1)
+      target += exponential_lpdf(t[i] | lambda);
+
+    else
+      target += exponential_lccdf(t[i] | lambda);
+
+  }
+
+}
+'
+```
+
+## Ajuste do modelo
+
+```{r}
+mod_exp <- stan_model(model_code = exp_stan)
+
+fit_exp <- sampling(
+  mod_exp,
+  data = stan_data,
+  iter = 4000,
+  warmup = 2000,
+  chains = 4,
+  seed = 123
+)
+```
+
+## Resumo
+
+```{r}
+print(fit_exp)
+```
+
+# Modelo Gamma
+
+Assumimos:
+
+$$
+T_i \sim \text{Gamma}(\alpha, \beta)
+$$
+
+## Código Stan
+
+```{r}
+gamma_stan <- '
+data {
+  int<lower=1> N;
+  vector<lower=0>[N] t;
+  array[N] int<lower=0,upper=1> d;
+}
+
+parameters {
+  real<lower=0> alpha;
+  real<lower=0> beta;
+}
+
+model {
+
+  alpha ~ gamma(0.01,0.01);
+  beta ~ gamma(0.01,0.01);
+
+  for (i in 1:N) {
+
+    if (d[i] == 1)
+      target += gamma_lpdf(t[i] | alpha, beta);
+
+    else
+      target += gamma_lccdf(t[i] | alpha, beta);
+
+  }
+
+}
+'
+```
+
+## Ajuste do modelo
+
+```{r}
+mod_gamma <- stan_model(model_code = gamma_stan)
+
+fit_gamma <- sampling(
+  mod_gamma,
+  data = stan_data,
+  iter = 4000,
+  warmup = 2000,
+  chains = 4,
+  seed = 123
+)
+```
+
+## Resumo
+
+```{r}
+print(fit_gamma)
+```
+
+# Modelo Log-Normal
+
+Assumimos:
+
+$$
+\log(T_i) \sim N(\mu,\sigma^2)
+$$
+
+## Código Stan
+
+```{r}
+lnorm_stan <- '
+data {
+  int<lower=1> N;
+  vector<lower=0>[N] t;
+  array[N] int<lower=0,upper=1> d;
+}
+
+parameters {
+  real mu;
+  real<lower=0> sigma;
+}
+
+model {
+
+  mu ~ normal(0,100);
+  sigma ~ cauchy(0,5);
+
+  for (i in 1:N) {
+
+    if (d[i] == 1)
+      target += lognormal_lpdf(t[i] | mu, sigma);
+
+    else
+      target += lognormal_lccdf(t[i] | mu, sigma);
+
+  }
+
+}
+'
+```
+
+## Ajuste do modelo
+
+```{r}
+mod_lnorm <- stan_model(model_code = lnorm_stan)
+
+fit_lnorm <- sampling(
+  mod_lnorm,
+  data = stan_data,
+  iter = 4000,
+  warmup = 2000,
+  chains = 4,
+  seed = 123
+)
+```
+
+## Resumo
+
+```{r}
+print(fit_lnorm)
+```
+
+# Modelo Log-Logístico
+
+A função de sobrevivência do modelo log-logístico é:
+
+$$
+S(t) = \frac{1}{1 + (t/\alpha)^\beta}
+$$
+
+Neste exercício implementamos manualmente a densidade e a função de sobrevivência do modelo log-logístico utilizando funções definidas pelo usuário no Stan.
+
+## Código Stan
+
+```{r}
+llogis_stan <- '
+
+functions {
+
+  real my_loglogistic_lpdf(real t, real alpha, real beta) {
+
+    return log(beta) - log(alpha) +
+           (beta - 1) * (log(t) - log(alpha)) -
+           2 * log1p(pow(t / alpha, beta));
+
+  }
+
+  real my_loglogistic_lccdf(real t, real alpha, real beta) {
+
+    return -log1p(pow(t / alpha, beta));
+
+  }
+
+}
+
+data {
+
+  int<lower=1> N;
+  vector<lower=0>[N] t;
+  array[N] int<lower=0,upper=1> d;
+
+}
+
+parameters {
+
+  real<lower=0> alpha;
+  real<lower=0> beta;
+
+}
+
+model {
+
+  alpha ~ gamma(0.01,0.01);
+  beta ~ gamma(0.01,0.01);
+
+  for (i in 1:N) {
+
+    if (d[i] == 1)
+      target += my_loglogistic_lpdf(t[i] | alpha, beta);
+
+    else
+      target += my_loglogistic_lccdf(t[i] | alpha, beta);
+
+  }
+
+}
+'
+```
+
+## Ajuste do modelo
+
+```{r}
+mod_llogis <- stan_model(model_code = llogis_stan)
+
+fit_llogis <- sampling(
+  mod_llogis,
+  data = stan_data,
+  iter = 4000,
+  warmup = 2000,
+  chains = 4,
+  seed = 123
+)
+```
+
+## Resumo
+
+```{r}
+print(fit_llogis)
+```
+
+# Observações
+
+Para observações censuradas utilizamos as funções:
+
+- `*_lccdf()`
+
+pois:
+
+$$
+P(T > t) = S(t)
+$$
+
+Além disso, em Stan:
+
+```stan
+x ~ dist(...)
+```
+
+é equivalente a:
+
+```stan
+target += dist_lpdf(...)
+```
