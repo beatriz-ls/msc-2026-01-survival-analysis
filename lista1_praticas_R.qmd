@@ -15,9 +15,9 @@ format:
 Implemente os modelos exponencial, gamma, log-normal e log-logistico no stan e ajuste os modelos implementados ao banco de dados sobrevivencia::isoladores.
 :::
 
-## Carregando pacotes
+### Carregando pacotes
 
-```{r}
+```{r, warning=FALSE}
 library(rstan)
 library(sobrevivencia)
 library(survival)
@@ -26,7 +26,7 @@ rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 ```
 
-## Banco de dados
+### Banco de dados
 
 ```{r}
 data(isoladores, package = "sobrevivencia")
@@ -34,7 +34,7 @@ data(isoladores, package = "sobrevivencia")
 head(isoladores)
 ```
 
-## Preparação dos dados
+### Preparação dos dados
 
 ```{r}
 N <- nrow(isoladores)
@@ -42,11 +42,11 @@ N <- nrow(isoladores)
 stan_data <- list(
   N = N,
   t = isoladores$tempo,
-  d = isoladores$status
+  d = isoladores$evento
 )
 ```
 
-# Modelo Exponencial
+### Modelo Exponencial
 
 Assumimos:
 
@@ -60,7 +60,7 @@ $$
 S(t) = e^{-\lambda t}
 $$
 
-## Código Stan
+### Código Stan
 
 ```{r}
 exp_stan <- '
@@ -90,12 +90,16 @@ model {
 
 }
 '
+
+writeLines(exp_stan, "stan/exponencial.stan" )
 ```
 
-## Ajuste do modelo
+### Compilação e ajuste
 
-```{r}
-mod_exp <- stan_model(model_code = exp_stan)
+```{r, warning=FALSE}
+mod_exp <- stan_model(
+  file = "stan/exponencial.stan"
+)
 
 fit_exp <- sampling(
   mod_exp,
@@ -107,13 +111,17 @@ fit_exp <- sampling(
 )
 ```
 
-## Resumo
+### Resumo
 
 ```{r}
 print(fit_exp)
+
+summary(fit_exp)$summary
 ```
 
-# Modelo Gamma
+A média a posteriori do parâmetro de taxa foi igual a ($\hat\lambda$}=0.000497), com intervalo de credibilidade de 95% dado por ((0.000359,;0.000651)). Como no modelo exponencial o tempo médio de vida é dado por ($E(T)=1/\lambda$), obteve-se um tempo médio estimado de aproximadamente 2012 horas.
+
+### Modelo Gamma
 
 Assumimos:
 
@@ -121,7 +129,7 @@ $$
 T_i \sim \text{Gamma}(\alpha, \beta)
 $$
 
-## Código Stan
+### Código Stan
 
 ```{r}
 gamma_stan <- '
@@ -153,12 +161,14 @@ model {
 
 }
 '
+
+writeLines(gamma_stan, "stan/gamma.stan" )
 ```
 
-## Ajuste do modelo
+### Ajuste do modelo
 
-```{r}
-mod_gamma <- stan_model(model_code = gamma_stan)
+```{r, warning=FALSE}
+mod_gamma <- stan_model( file = "stan/gamma.stan" )
 
 fit_gamma <- sampling(
   mod_gamma,
@@ -170,13 +180,17 @@ fit_gamma <- sampling(
 )
 ```
 
-## Resumo
+### Resumo
 
 ```{r}
 print(fit_gamma)
+
+summary(fit_gamma)$summary
 ```
 
-# Modelo Log-Normal
+No modelo gama, a média a posteriori do parâmetro de forma foi igual a ($\hat\alpha=1.544$), enquanto a média a posteriori do parâmetro de taxa foi ($\hat\beta=0.000829$). Os respectivos intervalos de credibilidade de 95% foram ((1.009;,2.202)) para ($\alpha$) e ((0.000452;,0.001287)) para ($\beta$). Como a média da distribuição gama é dada por $E(T)=\frac{\alpha}{\beta}$, obteve-se um tempo médio estimado de aproximadamente (1862) horas.
+
+### Modelo Log-Normal
 
 Assumimos:
 
@@ -184,7 +198,7 @@ $$
 \log(T_i) \sim N(\mu,\sigma^2)
 $$
 
-## Código Stan
+### Código Stan
 
 ```{r}
 lnorm_stan <- '
@@ -216,12 +230,14 @@ model {
 
 }
 '
+
+writeLines(lnorm_stan, "stan/lognormal.stan" )
 ```
 
-## Ajuste do modelo
+### Compilação e ajuste
 
-```{r}
-mod_lnorm <- stan_model(model_code = lnorm_stan)
+```{r, warning=FALSE}
+mod_lnorm <- stan_model( file = "stan/lognormal.stan" )
 
 fit_lnorm <- sampling(
   mod_lnorm,
@@ -233,13 +249,21 @@ fit_lnorm <- sampling(
 )
 ```
 
-## Resumo
+### Resumo
 
 ```{r}
 print(fit_lnorm)
+
+summary(fit_lnorm)$summary
 ```
 
-# Modelo Log-Logístico
+Para o modelo log-normal, as médias a posteriori dos parâmetros foram ($\hat\mu=7.235$) e ($\hat\sigma=0.993$), com intervalos de credibilidade de 95% iguais a (6.975;,7.511) para ($\mu$) e (0.799;1.258) para ($\sigma$).
+
+Na parametrização log-normal, o tempo médio de vida é dado por $E(T)=\exp\left(\mu+\frac{\sigma^2}{2}\right)$.
+
+Substituindo as estimativas obtidas, encontrou-se um tempo médio estimado de aproximadamente (2075) horas. Os diagnósticos de convergência indicaram estabilidade das cadeias simuladas, com valores de $\hat{R}$ próximos de (1).
+
+### Modelo Log-Logístico
 
 A função de sobrevivência do modelo log-logístico é:
 
@@ -249,7 +273,7 @@ $$
 
 Neste exercício implementamos manualmente a densidade e a função de sobrevivência do modelo log-logístico utilizando funções definidas pelo usuário no Stan.
 
-## Código Stan
+### Código Stan
 
 ```{r}
 llogis_stan <- '
@@ -304,12 +328,14 @@ model {
 
 }
 '
+
+writeLines(llogis_stan, "stan/loglogistico.stan" )
 ```
 
-## Ajuste do modelo
+### Compilação e ajuste
 
-```{r}
-mod_llogis <- stan_model(model_code = llogis_stan)
+```{r, warning=FALSE}
+mod_llogis <- stan_model(file = "stan/loglogistico.stan" )
 
 fit_llogis <- sampling(
   mod_llogis,
@@ -321,32 +347,286 @@ fit_llogis <- sampling(
 )
 ```
 
-## Resumo
+### Resumo
 
 ```{r}
 print(fit_llogis)
+
+summary(fit_llogis)$summary
 ```
 
-# Observações
 
-Para observações censuradas utilizamos as funções:
+No modelo log-logístico, as médias a posteriori dos parâmetros foram ($\hat\alpha=1122.692$) e ($\hat\beta=1.732$). Os intervalos de credibilidade de 95% foram ((863.600;,1400.945)) para ($\alpha$) e ((1.319;,2.178)) para ($\beta$).
 
-- `*_lccdf()`
+Como (\beta > 1), a média da distribuição log-logística existe e é dada por
+$E(T)=\alpha \frac{\pi/\beta}{\sin(\pi/\beta)}$. Utilizando as estimativas a posteriori, obteve-se um tempo médio estimado de aproximadamente 2034 horas
 
-pois:
+
+# Questão 3
+
+::: {.callout-note}
+## Enunciado
+Implemente no Stan as versões frequentista e Bayesiana do modelo AFT com distribuição basal Weibull. Compare as estimativas dos parâmetros.
+:::
+
+Para implementar as versões frequentista e Bayesiana do modelo AFT Weibull e comparar os resultados, será gerados dados simulados com distribuição Weibull.
+
+```{r libraries, warning=FALSE}
+library(rstan)
+library(survstan)
+library(sobrevivencia)
+library(survival)
+
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+```
+
+Neste estudo geramos dados de um modelo Weibull com $\alpha = 1.5$ e $\sigma = 1000$, além de censura aleatória a direita.
+
+```{r, warning=FALSE}
+
+set.seed(123)
+
+n <- 100
+
+alpha_real <- 1.5
+sigma_real <- 1000
+
+# tempos reais de falha
+T_real <- rweibull(
+  n,
+  shape = alpha_real,
+  scale = sigma_real
+)
+
+# tempos de censura
+C <- runif(n, min = 500, max = 2500)
+
+# tempos observados
+tempo <- pmin(T_real, C)
+
+# indicador de falha
+evento <- as.numeric(T_real <= C)
+
+dados <- data.frame(
+  tempo = tempo,
+  evento = evento
+)
+
+head(dados)
+```
+
+### Ajuste frequentista com Survstan
+
+```{r, warning=FALSE}
+
+fit_freq <- aftreg(
+  Surv(tempo, evento) ~ 1,
+  data = dados,
+  baseline = "weibull"
+)
+```
+
+### Ajuste do Modelo Weibull com Stan
+
+```{r}
+
+stan_data <- list(
+  N = nrow(dados),
+  t = dados$tempo,
+  d = dados$evento
+)
+
+weibull_stan <- '
+data {
+
+  int<lower=1> N;
+  vector<lower=0>[N] t;
+  array[N] int<lower=0,upper=1> d;
+  int<lower=0,upper=1> is_bayes;
+
+}
+
+parameters {
+
+  real<lower=0> alpha;
+  real<lower=0> sigma;
+
+}
+
+model {
+
+  if(is_bayes == 1){
+
+    alpha ~ gamma(0.01, 0.01);
+    sigma ~ gamma(0.01, 0.01);
+
+  }
+
+  for(i in 1:N){
+
+    if(d[i] == 1)
+      target += weibull_lpdf(t[i] | alpha, sigma);
+
+    else
+      target += weibull_lccdf(t[i] | alpha, sigma);
+
+  }
+
+}
+'
+
+writeLines(
+  weibull_stan,
+  "stan/weibull_simulacao.stan"
+)
+```
+
+
+### Compilação do modelo
+
+```{r, warning=FALSE}
+mod_weibull <- stan_model(
+  file = "stan/weibull_simulacao.stan"
+)
+```
+
+No modelo implementado, a variável `is_bayes` foi utilizada para controlar o tipo de ajuste realizado:
+
+* `is_bayes = 0`: ajuste frequentista;
+* `is_bayes = 1`: ajuste Bayesiano.
+
+Quando `is_bayes = 1`, o modelo inclui prioris para os parâmetros:
 
 $$
-P(T > t) = S(t)
+\alpha \sim \text{Gamma}(0.01,0.01)
 $$
 
-Além disso, em Stan:
+e
 
-```stan
-x ~ dist(...)
+$$
+\sigma \sim \text{Gamma}(0.01,0.01)
+$$
+
+Caso contrário, o modelo utiliza apenas a abordagem frequentista.
+
+### Ajuste frequentista no Stan
+
+```{r, warning=FALSE}
+
+stan_data_freq <- list(
+  N = nrow(dados),
+  t = dados$tempo,
+  d = dados$evento,
+  is_bayes = 0
+)
+
+fit_freq_stan <- optimizing(
+  mod_weibull,
+  data = stan_data_freq,
+  hessian = TRUE
+)
 ```
 
-é equivalente a:
+### Estimativas frequentistas
 
-```stan
-target += dist_lpdf(...)
+```{r}
+fit_freq_stan$par
 ```
+
+### Matriz Hessiana
+
+```{r}
+fit_freq_stan$hessian
+```
+
+### Matriz de variâncias e covariâncias
+
+```{r}
+V <- solve(-fit_freq_stan$hessian)
+
+V
+```
+
+### Intervalos de confiança
+
+```{r}
+estimativas <- fit_freq_stan$par
+
+ep <- sqrt(diag(V))
+
+li <- estimativas - qnorm(0.975)*ep
+ls <- estimativas + qnorm(0.975)*ep
+
+cbind(
+  estimativas,
+  ep,
+  li,
+  ls
+)
+```
+
+As estimativas frequentistas foram obtidas por máxima verossimilhança utilizando a função `optimizing()` do pacote `rstan`.
+
+### Ajuste Bayesiano
+
+```{r, warning=FALSE}
+
+stan_data_bayes <- list(
+  N = nrow(dados),
+  t = dados$tempo,
+  d = dados$evento,
+  is_bayes = 1
+)
+
+fit_bayes <- sampling(
+  mod_weibull,
+  data = stan_data_bayes,
+  iter = 4000,
+  warmup = 2000,
+  chains = 4,
+  seed = 123
+)
+```
+
+### Resumo Bayesiano
+
+```{r}
+print(fit_bayes)
+
+summary(fit_bayes)$summary
+```
+
+### Comparação entre os modelos
+
+### Valores reais utilizados na simulação
+
+```{r}
+c(
+  alpha_real = alpha_real,
+  sigma_real = sigma_real
+)
+```
+
+### Estimativas frequentistas via survstan
+
+```{r}
+fit_freq$estimates
+```
+
+### Estimativas frequentistas via Stan
+
+```{r}
+fit_freq_stan$par
+```
+
+### Estimativas Bayesianas
+
+```{r}
+summary(fit_bayes)$summary
+```
+
+Os modelos frequentistas ajustados via `survstan` e via `Stan` apresentaram estimativas bastante semelhantes, como esperado, uma vez que ambos utilizam máxima verossimilhança.
+
+As estimativas Bayesianas também ficaram próximas dos valores reais utilizados na simulação, indicando que as prioris pouco informativas exerceram pequena influência sobre os resultados finais.
+
