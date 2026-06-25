@@ -1,0 +1,152 @@
+---
+title: "Lista 2"
+#subtitle: "use R!!!"
+author: "Beatriz Lima Silveira"
+lang: pt
+date: "`r Sys.Date()`"
+format:
+  html:
+    embed-resources: true
+---
+
+```{r}
+#| label: options
+#| echo: false
+
+options(dplyr.summarise.inform = FALSE)
+```
+
+# Análise do German Breast Cancer Study Group Dataset
+
+## 1. Introdução
+
+- Contextualização do problema
+- Objetivo do estudo
+- Descrição do desfecho:
+  - Tempo até recorrência (`rfst`)
+  - Indicador de censura (`cens`)
+
+## 2. Descrição da coorte
+
+### 2.1 Descrição das variáveis
+
+Tabela com:
+
+- htreat
+- age
+- menostat
+- tumsize
+- tumgrad
+- posnodal
+- prm
+- esm
+
+### 2.2 Estatísticas descritivas
+
+Variáveis contínuas:
+
+- média
+- desvio padrão
+- mediana
+- quartis
+
+Variáveis categóricas:
+
+- frequências
+- proporções
+
+### 2.3 Distribuições das variáveis contínuas
+
+- Histogramas
+- Boxplots
+
+---
+
+## 3. Análise não paramétrica da sobrevivência
+
+Objetivo:
+avaliar diferenças brutas de sobrevivência sem assumir modelo.
+
+### 3.1 Curva de Kaplan-Meier global
+
+- KM geral
+- Mediana de sobrevivência
+- Taxa de censura
+
+### 3.2 Kaplan-Meier por grupos
+
+#### Tratamento hormonal
+
+- Curvas
+- Comentários visuais
+
+#### Estado menopausal
+
+- Curvas
+- Verificação visual de cruzamentos
+
+#### Grau tumoral
+
+- Curvas
+- Avaliação visual de ordenação
+
+### 3.3 Testes de comparação
+
+#### Log-rank (ρ = 0)
+
+#### Tarone-Ware (ρ = 0.5)
+
+#### Wilcoxon/Peto-Peto (ρ = 1)
+
+#### Fleming-Harrington tardio (ρ = -1)
+
+Tabela resumo dos p-valores.
+
+### 3.4 Teste de tendência
+
+Aplicado ao grau tumoral.
+
+---
+
+## 4. Investigação preliminar das covariáveis contínuas
+
+Objetivo:
+avaliar associação e forma funcional.
+
+### 4.1 Modelos de Cox univariados
+
+- age
+- tumsize
+- posnodal
+- prm
+- esm
+
+Tabela:
+
+| variável | HR | IC95% | p |
+
+### 4.2 Avaliação da forma funcional
+
+- resíduos de martingale
+ou
+- splines restritos
+
+Objetivo:
+verificar linearidade.
+
+---
+
+## 5. Avaliação da hipótese de riscos proporcionais
+
+Objetivo:
+investigar a adequação do modelo de Cox.
+
+### 5.1 Evidências visuais
+
+- curvas KM
+- possíveis cruzamentos
+
+### 5.2 Teste de Schoenfeld
+
+```r
+cox.zph()

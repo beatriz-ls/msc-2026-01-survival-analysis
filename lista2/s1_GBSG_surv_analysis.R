@@ -7,6 +7,7 @@ library(survcure)
 library(dplyr)
 library(survival)
 library(survminer)
+library(sobrevivencia)
 
 # Script 1: Modelagem do dataset GBSG
 # [x] Curvas de KM
@@ -242,3 +243,45 @@ C <- a %*% V %*% a
 z <- c/sqrt(C)
 
 2*pnorm(abs(z), lower.tail = FALSE)
+
+# Avaliando PH -----------------------------------------------------------------
+
+## Criando Modelo de cox geral do zero
+
+cox0 <- coxph(
+  Surv(rfst, cens) ~
+    htreat +
+    age +
+    menostat +
+    tumsize +
+    tumgrad +
+    posnodal +
+    prm +
+    esm,
+  data = gbsg
+)
+
+## Avaliando residuos
+
+ggresiduals(cox0) # cox snell
+
+ggresiduals( # martingale
+  cox0,
+  type = "martingale"
+)
+
+ggresiduals( # deviance
+  cox0,
+  type = "deviance"
+)
+
+## Teste de proporcionalidade
+
+teste_ph <- cox.zph(
+  cox0,
+  transform = "km"
+)
+
+teste_ph # Modelo não funciona bem para PH
+
+
