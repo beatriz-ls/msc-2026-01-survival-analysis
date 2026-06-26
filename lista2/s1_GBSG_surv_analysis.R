@@ -2,16 +2,17 @@
 #install.packages(c('bellreg', 'LambertW', 'peppm', 'YPPE'))
 #install.packages(file.choose(), repos = NULL, type="source") # instalando survcurv
 
-library(shrink)
-library(survcure)
-library(dplyr)
 library(survival)
-library(survminer)
-library(sobrevivencia)
+library(survstan)
+library(tidyverse)
+library(shrink)
+library(gtsummary)
 
 # Script 1: Modelagem do dataset GBSG
 # [x] Curvas de KM
-# [] Testes de comparação de curvas para váriáveis categóricas
+# [x] Testes de comparação de curvas para váriáveis categóricas
+# [x] Teste de tendecia para variável ordinal
+# [] Avaliando proporcional hazards
 # [] 
 
 # Load data --------------------------------------------------------------------
@@ -52,6 +53,50 @@ gbsg <- GBSG %>%
   )
 
 rm(GBSG)
+
+# Analise descritiva -----------------------------------------------------------
+
+gbsg <- gbsg %>%
+  mutate(status = factor(cens,
+                         levels = c(0, 1),
+                         labels = c("Censurado", "Evento")))
+
+tab_status <- gbsg %>%
+  select(-id, -cens) %>%
+  tbl_summary(
+    by = status,
+    statistic = list(
+      all_continuous() ~ "{mean} ({sd})",
+      all_categorical() ~ "{n} ({p}%)"
+    ),
+    missing = "ifany"
+  ) %>%
+  add_p() %>%   # testa diferença entre grupos
+  bold_labels()
+
+tab_status
+
+gbsg %>%
+  group_by(status) %>%
+  summarise(
+    age_mean = mean(age, na.rm = TRUE),
+    age_sd = sd(age, na.rm = TRUE),
+    
+    tumsize_mean = mean(tumsize, na.rm = TRUE),
+    tumsize_sd = sd(tumsize, na.rm = TRUE),
+    
+    posnodal_mean = mean(posnodal, na.rm = TRUE),
+    posnodal_sd = sd(posnodal, na.rm = TRUE),
+    
+    rfst_mean = mean(rfst, na.rm = TRUE),
+    rfst_sd = sd(rfst, na.rm = TRUE)
+  )
+
+gbsg$age <- scale(gbsg$age)
+gbsg$tumsize <- scale(gbsg$tumsize)
+gbsg$posnodal <- scale(gbsg$posnodal)
+gbsg$prm <- scale(gbsg$prm)
+gbsg$esm <- scale(gbsg$esm)
 
 # Kaplan Meyer -----------------------------------------------------------------
 
@@ -263,25 +308,82 @@ cox0 <- coxph(
 
 ## Avaliando residuos
 
-ggresiduals(cox0) # cox snell
+# PH assumption
+ph_test <- cox.zph(cox0)
+print(ph_test)
+plot(ph_test)
 
-ggresiduals( # martingale
-  cox0,
-  type = "martingale"
+# resíduos
+mart_cox0 <- residuals(cox0, type = "martingale")
+residuals(cox0, type = "deviance")
+
+# Ajuste Yang and Prentice -----------------------------------------------------
+
+m <- ceiling(sqrt(nrow(gbsg)))
+
+yp <- ypreg(
+  Surv(rfst, cens) ~ htreat + age + menostat +
+    tumsize + tumgrad + posnodal + prm + esm,
+  data = gbsg,
+  #dist = piecewise(m = m)
 )
 
-ggresiduals( # deviance
-  cox0,
-  type = "deviance"
+
+po <- poreg(
+  Surv(rfst, cens) ~ htreat + age + menostat +
+    tumsize + tumgrad + posnodal + prm + esm,
+  data = gbsg,
+  #dist = piecewise(m = m)
 )
 
-## Teste de proporcionalidade
+# comparação PO vs YP
+AIC(po, yp)
+anova(po, yp)
 
-teste_ph <- cox.zph(
-  cox0,
-  transform = "km"
+ggresiduals(yp)
+ggresiduals(po)
+
+# Selecionando váriaveis e melhorando modelo geral -----------------------------
+
+
+form <- Surv(rfst, cens) ~
+  htreat + age + menostat +
+  tumsize + tumgrad +
+  posnodal + prm + esm
+
+yp_weib <- ypreg(form, data = gbsg, baseline = "weibull")
+
+yp_exp <- ypreg(form, data = gbsg, baseline = "exponential")
+
+yp_logn <- ypreg(form, data = gbsg, baseline = "lognormal")
+
+yp_llog <- ypreg(form, data = gbsg, baseline = "loglogistic")
+
+yp_fat  <- ypreg(form, data = gbsg, baseline = "fatigue")
+
+## Comparação
+
+comparacao <- data.frame(
+  Modelo = c("Weibull", "Fatigue"),
+  
+  logLik = c(
+    as.numeric(logLik(yp_weib)),
+    as.numeric(logLik(yp_fat))
+  ),
+  
+  AIC = c(
+    as.numeric(AIC(yp_weib)),
+    as.numeric(AIC(yp_fat))
+  )
 )
 
-teste_ph # Modelo não funciona bem para PH
+comparacao$DeltaAIC <- comparacao$AIC - min(comparacao$AIC)
 
+comparacao
+
+## Avaliando modelo de fadiga
+
+ggresiduals(yp_fat, type = "coxsnell")
+ggresiduals(yp_fat, type = "martingale")
+ggresiduals(yp_fat, type = "deviance")
 
