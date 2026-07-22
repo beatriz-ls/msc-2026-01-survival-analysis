@@ -107,8 +107,12 @@ surv_gbsg <- with(
 
 ## KM general
 
+fit <- survfit(surv_gbsg ~ 1, data = gbsg)
+
+summary(fit, times = c(365, 730, 1095)) # estimativas pomtuais
+
 km_plot <- ggsurvplot(
-  km,
+  fit,
   data = gbsg,
   risk.table = TRUE,
   
@@ -121,7 +125,7 @@ km_plot <- ggsurvplot(
 )
 
 ggsave(
-  filename = "lista2/plot/km.png",
+  filename = "lista2/plot/gbsg/km.png",
   plot = km_plot$plot,
   width = 8,
   height = 6,
@@ -147,7 +151,7 @@ km_htreat_plot <- ggsurvplot(
 )
 
 ggsave(
-  filename = "lista2/plot/km_htreat.png",
+  filename = "lista2/plot/gbsg/km_htreat.png",
   plot = km_htreat_plot$plot,
   width = 8,
   height = 6,
@@ -173,7 +177,7 @@ km_meno_plot <- ggsurvplot(
 )
 
 ggsave(
-  filename = "lista2/plot/km_meno.png",
+  filename = "lista2/plot/gbsg/km_meno.png",
   plot = km_meno_plot$plot,
   width = 8,
   height = 6,
@@ -199,7 +203,7 @@ km_grad_plot <- ggsurvplot(
 )
 
 ggsave(
-  filename = "lista2/plot/km_grad.png",
+  filename = "lista2/plot/gbsg/km_grad.png",
   plot = km_meno_plot$plot,
   width = 8,
   height = 6,
@@ -311,7 +315,42 @@ cox0 <- coxph(
 # PH assumption
 ph_test <- cox.zph(cox0)
 print(ph_test)
-plot(ph_test)
+
+teste_ph <- cox.zph(cox0)
+
+teste_ph
+
+if (!dir.exists("lista2/plot/gbsg")) {
+  dir.create("lista2/plot/gbsg", recursive = TRUE)
+}
+
+png(
+  filename = "lista2/plot/gbsg/diagnostico_ph.png",
+  width = 3600,
+  height = 2400,
+  res = 300
+)
+
+par(
+  mfrow = c(2, 3),
+  mar = c(5, 5, 4, 2),
+  cex.axis = 1.2,
+  cex.lab = 1.3,
+  cex.main = 1.4
+)
+
+# usa índice numérico (forma correta do cox.zph)
+for (i in seq_len(nrow(teste_ph$table))) {
+  plot(teste_ph[i],
+       main = rownames(teste_ph$table)[i],
+       xlab = "Tempo",
+       ylab = "Schoenfeld residuals")
+  abline(h = 0, col = "red")
+}
+
+par(mfrow = c(1, 1))
+
+dev.off()
 
 # resíduos
 mart_cox0 <- residuals(cox0, type = "martingale")
